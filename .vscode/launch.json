@@ -13,7 +13,7 @@
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "build",
             "initCommands": [
-                "settings set target.disable-aslr true"
+                "settings set target.disable-aslr false"
             ]
         }
     ]
