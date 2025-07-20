@@ -405,11 +405,44 @@ TEST(ScanTest, scan_returns_all_supported_types_with_specifiers) {
     ASSERT_EQ(std::get<21>(values), "ghij");
 }
 
-TEST(ScanTest, scan_returns_error_when_argument_count_mismatch) {
-    auto result0 =
-        stdx::scan<int8_t>("int8_t:127 -128", "int8_t:{%d} {%d}");
+TEST(ScanTest, scan_returns_error_if_argument_count_mismatch) {
+    auto result0 = stdx::scan<int8_t>("int8_t:127 -128", "int8_t:{%d} {%d}");
     ASSERT_EQ(result0.error().message, "Argument count mismatch");
 
     auto result1 = stdx::scan<int8_t, int8_t>("int8_t:127", "int8_t:{%d}");
     ASSERT_EQ(result1.error().message, "Argument count mismatch");
 }
+
+TEST(ScanTest, scan_returns_error_if_incorrect_specifier) {
+    auto result = stdx::scan<int8_t>("1", "{x}");
+    ASSERT_EQ(result.error().message, "Invalid format specifier");
+}
+
+TEST(ScanTest, scan_returns_error_if_input_empty) {
+    auto result = stdx::scan<int8_t>("", "{%d}");
+    ASSERT_EQ(result.error().message, "Empty input");
+}
+
+TEST(ScanTest, scan_returns_error_if_wrong_conversion) {
+    auto result = stdx::scan<int8_t>("abcd", "{%d}");
+    ASSERT_EQ(result.error().message, "Conversion failed");
+}
+
+TEST(ScanTest, scan_returns_error_if_conversion_is_out_of_range) {
+    auto result = stdx::scan<int8_t>("128", "{%d}");
+    ASSERT_EQ(result.error().message, "Conversion out of range");
+}
+
+TEST(ScanTest, scan_returns_error_if_placeholders_do_not_match) {
+    auto result = stdx::scan<int8_t>("0", "{%d");
+    ASSERT_EQ(result.error().message, "Unformatted text in input and format string are different");
+}
+
+TEST(ScanTest, scan_returns_error_if_input_do_not_match_format) {
+    auto result0 = stdx::scan<int8_t>("abcd 0", "abc {%d}");
+    ASSERT_EQ(result0.error().message, "Unformatted text in input and format string are different");
+
+    auto result1 = stdx::scan<int8_t>("abc 0", "abcd {%d}");
+    ASSERT_EQ(result1.error().message, "Unformatted text in input and format string are different");
+}
+
