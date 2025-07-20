@@ -67,9 +67,8 @@ static bool validate_format_specifier(std::string_view fmt) {
 }
 
 template <typename T>
+    requires is_supported_type_v<T>
 std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
-    static_assert(is_supported_type_v<T>, "Unsupported type");
-
     if (!validate_format_specifier<T>(fmt)) {
         return std::unexpected(scan_error{"Invalid format specifier"});
     }
