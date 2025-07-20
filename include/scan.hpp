@@ -8,8 +8,8 @@ namespace stdx {
 using namespace details;
 
 template <typename... Ts>
-std::expected<details::scan_result<Ts...>, scan_error> scan(std::string_view input, std::string_view format) {
-    auto sources = details::parse_sources(input, format);
+std::expected<scan_result<Ts...>, scan_error> scan(std::string_view input, std::string_view format) {
+    auto sources = parse_sources(input, format);
     if (!sources) {
         return std::unexpected(sources.error());
     }
