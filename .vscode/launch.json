@@ -8,13 +8,15 @@
             "type": "lldb",
             "request": "launch",
             "name": "Launch DymanicScan",
-            "program": "${workspaceFolder}/build/scan_tests",
-            "args": [],
-            "cwd": "${workspaceFolder}/build",
-            "preLaunchTask": "build",
-            "initCommands": [
-                "settings set target.disable-aslr false"
-            ]
+            "program": "${workspaceFolder}/build/DymanicScan",
+            "args": [
+                "-i",
+                "input.txt",
+                "--command",
+                "checksum"
+            ],
+            "cwd": "${workspaceFolder}/build"
         }
+
     ]
 }
