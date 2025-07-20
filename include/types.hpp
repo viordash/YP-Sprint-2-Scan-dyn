@@ -13,12 +13,8 @@ struct scan_error {
 // Шаблонный класс для хранения результатов успешного сканирования
 
 template <typename... Ts>
-class scan_result {
-private:
-    std::tuple<Ts...> values_;
-
-public:
-    const std::tuple<Ts...> &values() const { return values_; }
+struct scan_result {
+    std::tuple<Ts...> values;
 };
 
 } // namespace stdx::details
