@@ -28,7 +28,6 @@ concept is_supported_type_v =
     || std::is_same_v<std::remove_cv_t<T>, int32_t> 
     || std::is_same_v<std::remove_cv_t<T>, int64_t> 
     || std::is_same_v<std::remove_cv_t<T>, uint8_t> 
-    || std::is_same_v<std::remove_cv_t<T>, uint8_t*> 
     || std::is_same_v<std::remove_cv_t<T>, uint16_t> 
     || std::is_same_v<std::remove_cv_t<T>, uint32_t> 
     || std::is_same_v<std::remove_cv_t<T>, uint64_t> 
