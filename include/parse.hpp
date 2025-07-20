@@ -14,15 +14,15 @@
 
 namespace stdx::details {
 
-template <typename T>
-constexpr bool is_string_view_v = std::is_same_v<std::remove_cv_t<T>, std::string_view>;
+template <typename T, typename... Ts>
+concept is_string_view_v = std::is_same_v<std::remove_cv_t<T>, std::string_view>;
 
 template <typename T>
-constexpr bool is_string_v = std::is_same_v<std::remove_cv_t<T>, std::string>;
+concept is_string_v = std::is_same_v<std::remove_cv_t<T>, std::string>;
 
 // clang-format off
 template <typename T>
-constexpr bool is_supported_type_v = 
+concept is_supported_type_v = 
     std::is_same_v<std::remove_cv_t<T>, int8_t>  
     || std::is_same_v<std::remove_cv_t<T>, int16_t> 
     || std::is_same_v<std::remove_cv_t<T>, int32_t> 
