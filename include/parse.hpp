@@ -43,25 +43,24 @@ static bool validate_format_specifier(std::string_view fmt) {
     if (fmt.empty()) {
         return true;
     }
-    if (fmt.size() != 1) {
+    if (fmt.size() != 2) {
         return false;
     }
-    char format_spec = fmt[0];
 
     if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
-        return format_spec == 'd';
+        return fmt == "%d";
     }
     if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-        return format_spec == 'u';
+        return fmt == "%u";
     }
     if constexpr (std::is_floating_point_v<T>) {
-        return format_spec == 'f';
+        return fmt == "%f";
     }
     if constexpr (is_string_view_v<T>) {
-        return format_spec == 's';
+        return fmt == "%s";
     }
     if constexpr (is_string_v<T>) {
-        return format_spec == 's';
+        return fmt == "%s";
     }
     return false;
 }
