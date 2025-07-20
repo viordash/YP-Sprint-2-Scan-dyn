@@ -220,7 +220,7 @@ TEST(ScanTest, parse_value_with_format__uint64_t) {
 
 TEST(ScanTest, parse_value_with_format__uint64_t__without_specifier) {
     ASSERT_EQ(parse_value_with_format<uint64_t>("18446744073709551615", ""), std::numeric_limits<uint64_t>::max());
-    ASSERT_EQ(parse_value_with_format<uint64_t>("0", "%u"), std::numeric_limits<uint64_t>::min());
+    ASSERT_EQ(parse_value_with_format<uint64_t>("0", ""), std::numeric_limits<uint64_t>::min());
 
     ASSERT_EQ(parse_value_with_format<uint64_t>("18446744073709551616", "").error().message, "Conversion out of range");
     ASSERT_EQ(parse_value_with_format<uint64_t>("-1", "").error().message, "Conversion failed");
