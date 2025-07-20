@@ -1,7 +1,10 @@
 #pragma once
 
+#include <array>
+#include <charconv>
 #include <cstdint>
 #include <expected>
+#include <map>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -10,8 +13,6 @@
 #include "types.hpp"
 
 namespace stdx::details {
-
-// здесь ваш код
 
 // clang-format off
 template <typename T>
@@ -31,10 +32,94 @@ constexpr bool is_supported_type_v =
     || std::is_same_v<std::remove_cv_t<T>, std::string>;
 // clang-format on
 
-// Функция для парсинга значения с учетом спецификатора формата
+template <typename T>
+std::expected<T, scan_error> parse_integer(std::string_view input) {
+    T value;
+    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
+
+    if (result.ec == std::errc::result_out_of_range) {
+        return std::unexpected(scan_error{"Integer conversion out of range"});
+    } else if (result.ec != std::errc()) {
+        return std::unexpected(scan_error{"Integer conversion failed"});
+    }
+    return value;
+}
+
+template <typename T>
+std::expected<T, scan_error> parse_unsigned(std::string_view input) {
+    T value;
+    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (result.ec == std::errc::result_out_of_range) {
+        return std::unexpected(scan_error{"Unsigned conversion out of range"});
+    } else if (result.ec != std::errc()) {
+        return std::unexpected(scan_error{"Unsigned conversion failed"});
+    }
+    return value;
+}
+
+template <typename T>
+std::expected<T, scan_error> parse_float(std::string_view input) {
+    T value;
+    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (result.ec == std::errc::result_out_of_range) {
+        return std::unexpected(scan_error{"Floating point conversion out of range"});
+    } else if (result.ec != std::errc()) {
+        return std::unexpected(scan_error{"Floating point conversion failed"});
+    }
+    return value;
+}
+
+template <typename T>
+std::expected<T, scan_error> parse_string(std::string_view input) {
+    if constexpr (std::is_same_v<std::remove_cv_t<T>, std::string_view>) {
+        return T(input);
+    } else if constexpr (std::is_same_v<std::remove_cv_t<T>, std::string>) {
+        return T(input);
+    } else {
+        return std::unexpected(scan_error{"Type is not a string"});
+    }
+}
+
 template <typename T>
 std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
-    // здесь ваш код
+    static_assert(is_supported_type_v<T>, "Unsupported type");
+
+    if (fmt.size() != 1) {
+        return std::unexpected(scan_error{"Invalid format specifier"});
+    }
+    if (input.empty()) {
+        return std::unexpected(scan_error{"Empty input"});
+    }
+
+    char format_spec = fmt[0];
+
+    switch (format_spec) {
+    case 'd':
+        if constexpr (std::is_signed_v<T>) {
+            return parse_integer<T>(input);
+        } else {
+            return std::unexpected(scan_error{"Type is not a signed integer"});
+        }
+
+    case 'u':
+        if constexpr (std::is_unsigned_v<T>) {
+            return parse_unsigned<T>(input);
+        } else {
+            return std::unexpected(scan_error{"Type is not a unsigned integer"});
+        }
+
+    case 'f':
+        if constexpr (std::is_floating_point_v<T>) {
+            return parse_float<T>(input);
+        } else {
+            return std::unexpected(scan_error{"Type is not a floating"});
+        }
+    case 's':
+        return parse_string<T>(input);
+    default:
+        break;
+    }
+    return std::unexpected(scan_error{"Invalid format specifier"});
 }
 
 // Функция для проверки корректности входных данных и выделения из обеих строк интересующих данных для парсинга
