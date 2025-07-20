@@ -138,7 +138,8 @@ TEST(ScanTest, parse_value_with_format__int64_t) {
     ASSERT_EQ(parse_value_with_format<int64_t>("-9223372036854775808", "%d"), std::numeric_limits<int64_t>::min());
 
     ASSERT_EQ(parse_value_with_format<int64_t>("9223372036854775808", "%d").error().message, "Conversion out of range");
-    ASSERT_EQ(parse_value_with_format<int64_t>("-9223372036854775809", "%d").error().message, "Conversion out of range");
+    ASSERT_EQ(parse_value_with_format<int64_t>("-9223372036854775809", "%d").error().message,
+              "Conversion out of range");
     ASSERT_EQ(parse_value_with_format<int64_t>("-", "%d").error().message, "Conversion failed");
     ASSERT_EQ(parse_value_with_format<int64_t>("x", "%d").error().message, "Conversion failed");
 }
@@ -229,7 +230,7 @@ TEST(ScanTest, parse_value_with_format__uint64_t__without_specifier) {
 
 TEST(ScanTest, parse_value_with_format__float) {
     ASSERT_FLOAT_EQ(parse_value_with_format<float>("3.402823e+38", "%f").value(), std::numeric_limits<float>::max());
-    ASSERT_FLOAT_EQ(parse_value_with_format<float>("0", "%f").value(), 0);
+    ASSERT_FLOAT_EQ(parse_value_with_format<float>("0.0", "%f").value(), 0);
     ASSERT_FLOAT_EQ(parse_value_with_format<float>("1.175494e-38", "%f").value(), std::numeric_limits<float>::min());
 
     ASSERT_EQ(parse_value_with_format<float>("3.402823e+39", "%f").error().message, "Conversion out of range");
@@ -240,7 +241,7 @@ TEST(ScanTest, parse_value_with_format__float) {
 
 TEST(ScanTest, parse_value_with_format__float__without_specifier) {
     ASSERT_FLOAT_EQ(parse_value_with_format<float>("3.402823e+38", "").value(), std::numeric_limits<float>::max());
-    ASSERT_FLOAT_EQ(parse_value_with_format<float>("0", "").value(), 0);
+    ASSERT_FLOAT_EQ(parse_value_with_format<float>("0.0", "").value(), 0);
     ASSERT_FLOAT_EQ(parse_value_with_format<float>("1.175494e-38", "").value(), std::numeric_limits<float>::min());
 
     ASSERT_EQ(parse_value_with_format<float>("3.402823e+39", "").error().message, "Conversion out of range");
@@ -251,7 +252,7 @@ TEST(ScanTest, parse_value_with_format__float__without_specifier) {
 
 TEST(ScanTest, parse_value_with_format__double) {
     ASSERT_FLOAT_EQ(parse_value_with_format<double>("1.797693e+308", "%f").value(), std::numeric_limits<double>::max());
-    ASSERT_FLOAT_EQ(parse_value_with_format<double>("0", "%f").value(), 0);
+    ASSERT_FLOAT_EQ(parse_value_with_format<double>("0.0", "%f").value(), 0);
     ASSERT_FLOAT_EQ(parse_value_with_format<double>("2.225074e-308", "%f").value(), std::numeric_limits<double>::min());
 
     ASSERT_EQ(parse_value_with_format<double>("1.797693e+309", "%f").error().message, "Conversion out of range");
@@ -262,7 +263,7 @@ TEST(ScanTest, parse_value_with_format__double) {
 
 TEST(ScanTest, parse_value_with_format__double__without_specifier) {
     ASSERT_FLOAT_EQ(parse_value_with_format<double>("1.797693e+308", "").value(), std::numeric_limits<double>::max());
-    ASSERT_FLOAT_EQ(parse_value_with_format<double>("0", "").value(), 0);
+    ASSERT_FLOAT_EQ(parse_value_with_format<double>("0.0", "").value(), 0);
     ASSERT_FLOAT_EQ(parse_value_with_format<double>("2.225074e-308", "").value(), std::numeric_limits<double>::min());
 
     ASSERT_EQ(parse_value_with_format<double>("1.797693e+309", "").error().message, "Conversion out of range");
@@ -294,7 +295,121 @@ TEST(ScanTest, parse_value_with_format__string__without_specifier) {
     ASSERT_EQ(parse_value_with_format<std::string>("Test", ""), "Test");
 }
 
-TEST(ScanTest, SimpleTest) {
-    auto result = stdx::scan<std::string>("number", "{}");
-    ASSERT_FALSE(result);
+TEST(ScanTest, scan_2_vars_with_specifiers) {
+    auto result =
+        stdx::scan<int32_t, float>("I want to sum 42 and 3.14 numbers.", "I want to sum {%d} and {%f} numbers.");
+    ASSERT_TRUE(result.has_value());
+    auto values = result.value().values;
+    ASSERT_EQ(std::get<0>(values), 42);
+    ASSERT_FLOAT_EQ(std::get<1>(values), 3.14f);
+}
+
+TEST(ScanTest, scan_2_vars_without_specifiers) {
+    auto result = stdx::scan<int32_t, float>("I want to sum 42 and 3.14 numbers.", "I want to sum {} and {} numbers.");
+    ASSERT_TRUE(result.has_value());
+    auto values = result.value().values;
+    ASSERT_EQ(std::get<0>(values), 42);
+    ASSERT_FLOAT_EQ(std::get<1>(values), 3.14f);
+}
+
+TEST(ScanTest, scan_2_vars_with_and_without_specifiers) {
+    auto result =
+        stdx::scan<int32_t, float>("I want to sum 42 and 3.14 numbers.", "I want to sum {%d} and {} numbers.");
+    ASSERT_TRUE(result.has_value());
+    auto values = result.value().values;
+    ASSERT_EQ(std::get<0>(values), 42);
+    ASSERT_FLOAT_EQ(std::get<1>(values), 3.14f);
+}
+
+TEST(ScanTest, scan_returns_all_supported_types_without_specifiers) {
+    auto result =
+        stdx::scan<int8_t, int8_t, int16_t, int16_t, int32_t, int32_t, int64_t, int64_t, uint8_t, uint8_t, uint16_t,
+                   uint16_t, uint32_t, uint32_t, uint64_t, uint64_t, float, float, double, double, std::string_view,
+                   std::string>("int8_t:127 -128, int16_t:32767 -32768, int32_t:2147483647 -2147483648, "
+                                "int64_t:9223372036854775807 -9223372036854775808, uint8_t:255 0, "
+                                "uint16_t:65535 0, uint32_t:4294967295 0, "
+                                "uint64_t:18446744073709551615 0, float:3.402823e+38 1.175494e-38, "
+                                "double:1.797693e+308 2.225074e-308, string_view:abcdef, string:ghij",
+
+                                "int8_t:{} {}, int16_t:{} {}, int32_t:{} {}, "
+                                "int64_t:{} {}, uint8_t:{} {}, "
+                                "uint16_t:{} {}, uint32_t:{} {}, "
+                                "uint64_t:{} {}, float:{} {}, "
+                                "double:{} {}, string_view:{}, string:{}");
+    ASSERT_TRUE(result.has_value());
+    auto values = result.value().values;
+    ASSERT_EQ(std::tuple_size_v<decltype(values)>, 22);
+    ASSERT_EQ(std::get<0>(values), std::numeric_limits<int8_t>::max());
+    ASSERT_EQ(std::get<1>(values), std::numeric_limits<int8_t>::min());
+    ASSERT_EQ(std::get<2>(values), std::numeric_limits<int16_t>::max());
+    ASSERT_EQ(std::get<3>(values), std::numeric_limits<int16_t>::min());
+    ASSERT_EQ(std::get<4>(values), std::numeric_limits<int32_t>::max());
+    ASSERT_EQ(std::get<5>(values), std::numeric_limits<int32_t>::min());
+    ASSERT_EQ(std::get<6>(values), std::numeric_limits<int64_t>::max());
+    ASSERT_EQ(std::get<7>(values), std::numeric_limits<int64_t>::min());
+    ASSERT_EQ(std::get<8>(values), std::numeric_limits<uint8_t>::max());
+    ASSERT_EQ(std::get<9>(values), std::numeric_limits<uint8_t>::min());
+    ASSERT_EQ(std::get<10>(values), std::numeric_limits<uint16_t>::max());
+    ASSERT_EQ(std::get<11>(values), std::numeric_limits<uint16_t>::min());
+    ASSERT_EQ(std::get<12>(values), std::numeric_limits<uint32_t>::max());
+    ASSERT_EQ(std::get<13>(values), std::numeric_limits<uint32_t>::min());
+    ASSERT_EQ(std::get<14>(values), std::numeric_limits<uint64_t>::max());
+    ASSERT_EQ(std::get<15>(values), std::numeric_limits<uint64_t>::min());
+    ASSERT_FLOAT_EQ(std::get<16>(values), std::numeric_limits<float>::max());
+    ASSERT_FLOAT_EQ(std::get<17>(values), std::numeric_limits<float>::min());
+    ASSERT_FLOAT_EQ(std::get<18>(values), std::numeric_limits<double>::max());
+    ASSERT_FLOAT_EQ(std::get<19>(values), std::numeric_limits<double>::min());
+    ASSERT_EQ(std::get<20>(values), "abcdef");
+    ASSERT_EQ(std::get<21>(values), "ghij");
+}
+
+TEST(ScanTest, scan_returns_all_supported_types_with_specifiers) {
+    auto result =
+        stdx::scan<int8_t, int8_t, int16_t, int16_t, int32_t, int32_t, int64_t, int64_t, uint8_t, uint8_t, uint16_t,
+                   uint16_t, uint32_t, uint32_t, uint64_t, uint64_t, float, float, double, double, std::string_view,
+                   std::string>("int8_t:127 -128, int16_t:32767 -32768, int32_t:2147483647 -2147483648, "
+                                "int64_t:9223372036854775807 -9223372036854775808, uint8_t:255 0, "
+                                "uint16_t:65535 0, uint32_t:4294967295 0, "
+                                "uint64_t:18446744073709551615 0, float:3.402823e+38 1.175494e-38, "
+                                "double:1.797693e+308 2.225074e-308, string_view:abcdef, string:ghij",
+
+                                "int8_t:{%d} {%d}, int16_t:{%d} {%d}, int32_t:{%d} {%d}, "
+                                "int64_t:{%d} {%d}, uint8_t:{%u} {%u}, "
+                                "uint16_t:{%u} {%u}, uint32_t:{%u} {%u}, "
+                                "uint64_t:{%u} {%u}, float:{%f} {%f}, "
+                                "double:{%f} {%f}, string_view:{%s}, string:{%s}");
+    ASSERT_TRUE(result.has_value());
+    auto values = result.value().values;
+    ASSERT_EQ(std::tuple_size_v<decltype(values)>, 22);
+    ASSERT_EQ(std::get<0>(values), std::numeric_limits<int8_t>::max());
+    ASSERT_EQ(std::get<1>(values), std::numeric_limits<int8_t>::min());
+    ASSERT_EQ(std::get<2>(values), std::numeric_limits<int16_t>::max());
+    ASSERT_EQ(std::get<3>(values), std::numeric_limits<int16_t>::min());
+    ASSERT_EQ(std::get<4>(values), std::numeric_limits<int32_t>::max());
+    ASSERT_EQ(std::get<5>(values), std::numeric_limits<int32_t>::min());
+    ASSERT_EQ(std::get<6>(values), std::numeric_limits<int64_t>::max());
+    ASSERT_EQ(std::get<7>(values), std::numeric_limits<int64_t>::min());
+    ASSERT_EQ(std::get<8>(values), std::numeric_limits<uint8_t>::max());
+    ASSERT_EQ(std::get<9>(values), std::numeric_limits<uint8_t>::min());
+    ASSERT_EQ(std::get<10>(values), std::numeric_limits<uint16_t>::max());
+    ASSERT_EQ(std::get<11>(values), std::numeric_limits<uint16_t>::min());
+    ASSERT_EQ(std::get<12>(values), std::numeric_limits<uint32_t>::max());
+    ASSERT_EQ(std::get<13>(values), std::numeric_limits<uint32_t>::min());
+    ASSERT_EQ(std::get<14>(values), std::numeric_limits<uint64_t>::max());
+    ASSERT_EQ(std::get<15>(values), std::numeric_limits<uint64_t>::min());
+    ASSERT_FLOAT_EQ(std::get<16>(values), std::numeric_limits<float>::max());
+    ASSERT_FLOAT_EQ(std::get<17>(values), std::numeric_limits<float>::min());
+    ASSERT_FLOAT_EQ(std::get<18>(values), std::numeric_limits<double>::max());
+    ASSERT_FLOAT_EQ(std::get<19>(values), std::numeric_limits<double>::min());
+    ASSERT_EQ(std::get<20>(values), "abcdef");
+    ASSERT_EQ(std::get<21>(values), "ghij");
+}
+
+TEST(ScanTest, scan_returns_error_when_argument_count_mismatch) {
+    auto result0 =
+        stdx::scan<int8_t>("int8_t:127 -128", "int8_t:{%d} {%d}");
+    ASSERT_EQ(result0.error().message, "Argument count mismatch");
+
+    auto result1 = stdx::scan<int8_t, int8_t>("int8_t:127", "int8_t:{%d}");
+    ASSERT_EQ(result1.error().message, "Argument count mismatch");
 }
