@@ -15,6 +15,7 @@ struct scan_error {
 template <typename... Ts>
 struct scan_result {
     std::tuple<Ts...> values;
+    explicit scan_result(std::tuple<Ts...> v) : values(std::move(v)) {}
 };
 
 } // namespace stdx::details
