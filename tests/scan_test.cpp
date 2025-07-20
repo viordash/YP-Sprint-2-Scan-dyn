@@ -49,6 +49,24 @@ TEST(ScanTest, parse_value_with_format__invalid_specifier__returns_error) {
     ASSERT_EQ(parse_value_with_format<int8_t>("0", "u").error().message, "Invalid format specifier");
     ASSERT_EQ(parse_value_with_format<int8_t>("0", "f").error().message, "Invalid format specifier");
     ASSERT_EQ(parse_value_with_format<int8_t>("0", "s").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%u").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%s").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%f").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%d").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%s").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%f").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%d").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%u").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%s").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%d").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%u").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%s").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%d").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%u").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%f").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%d").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%u").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%f").error().message, "Invalid format specifier");
 }
 
 TEST(ScanTest, parse_value_with_format__with_empty_input_in_numbers_returns_error) {
@@ -446,3 +464,7 @@ TEST(ScanTest, scan_returns_error_if_input_do_not_match_format) {
     ASSERT_EQ(result1.error().message, "Unformatted text in input and format string are different");
 }
 
+TEST(ScanTest, scan_returns_error_if_types_do_not_match) {
+    auto result = stdx::scan<int8_t>("int8_t:127", "int8_t:{%f}");
+    ASSERT_EQ(result.error().message, "Invalid format specifier");
+}
