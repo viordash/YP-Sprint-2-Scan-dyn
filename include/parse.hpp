@@ -14,6 +14,12 @@
 
 namespace stdx::details {
 
+template <typename T>
+constexpr bool is_string_view_v = std::is_same_v<std::remove_cv_t<T>, std::string_view>;
+
+template <typename T>
+constexpr bool is_string_v = std::is_same_v<std::remove_cv_t<T>, std::string>;
+
 // clang-format off
 template <typename T>
 constexpr bool is_supported_type_v = 
@@ -28,98 +34,66 @@ constexpr bool is_supported_type_v =
     || std::is_same_v<std::remove_cv_t<T>, uint64_t> 
     || std::is_same_v<std::remove_cv_t<T>, float>   
     || std::is_same_v<std::remove_cv_t<T>, double>  
-    || std::is_same_v<std::remove_cv_t<T>, std::string_view> 
-    || std::is_same_v<std::remove_cv_t<T>, std::string>;
+    || is_string_view_v<T> 
+    || is_string_v<T>;
 // clang-format on
 
 template <typename T>
-std::expected<T, scan_error> parse_integer(std::string_view input) {
-    T value;
-    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
-
-    if (result.ec == std::errc::result_out_of_range) {
-        return std::unexpected(scan_error{"Integer conversion out of range"});
-    } else if (result.ec != std::errc()) {
-        return std::unexpected(scan_error{"Integer conversion failed"});
+static bool validate_format_specifier(std::string_view fmt) {
+    if (fmt.empty()) {
+        return true;
     }
-    return value;
-}
-
-template <typename T>
-std::expected<T, scan_error> parse_unsigned(std::string_view input) {
-    T value;
-    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (result.ec == std::errc::result_out_of_range) {
-        return std::unexpected(scan_error{"Unsigned conversion out of range"});
-    } else if (result.ec != std::errc()) {
-        return std::unexpected(scan_error{"Unsigned conversion failed"});
+    if (fmt.size() != 1) {
+        return false;
     }
-    return value;
-}
+    char format_spec = fmt[0];
 
-template <typename T>
-std::expected<T, scan_error> parse_float(std::string_view input) {
-    T value;
-    auto result = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (result.ec == std::errc::result_out_of_range) {
-        return std::unexpected(scan_error{"Floating point conversion out of range"});
-    } else if (result.ec != std::errc()) {
-        return std::unexpected(scan_error{"Floating point conversion failed"});
+    if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
+        return format_spec == 'd';
     }
-    return value;
-}
-
-template <typename T>
-std::expected<T, scan_error> parse_string(std::string_view input) {
-    if constexpr (std::is_same_v<std::remove_cv_t<T>, std::string_view>) {
-        return T(input);
-    } else if constexpr (std::is_same_v<std::remove_cv_t<T>, std::string>) {
-        return T(input);
-    } else {
-        return std::unexpected(scan_error{"Type is not a string"});
+    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+        return format_spec == 'u';
     }
+    if constexpr (std::is_floating_point_v<T>) {
+        return format_spec == 'f';
+    }
+    if constexpr (is_string_view_v<T>) {
+        return format_spec == 's';
+    }
+    if constexpr (is_string_v<T>) {
+        return format_spec == 's';
+    }
+    return false;
 }
 
 template <typename T>
 std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
     static_assert(is_supported_type_v<T>, "Unsupported type");
 
-    if (fmt.size() != 1) {
+    if (!validate_format_specifier<T>(fmt)) {
         return std::unexpected(scan_error{"Invalid format specifier"});
     }
-    if (input.empty()) {
-        return std::unexpected(scan_error{"Empty input"});
+
+    if constexpr (is_string_view_v<T>) {
+        return T(input);
+    } else if constexpr (is_string_v<T>) {
+        return T(input);
+    } else {
+
+        if (input.empty()) {
+            return std::unexpected(scan_error{"Empty input"});
+        }
+
+        T value;
+        auto result = std::from_chars(input.data(), input.data() + input.size(), value);
+        if (result.ec == std::errc::result_out_of_range) {
+            return std::unexpected(scan_error{"Conversion out of range"});
+        } else if (result.ec != std::errc()) {
+            return std::unexpected(scan_error{"Conversion failed"});
+        }
+
+        return value;
     }
-
-    char format_spec = fmt[0];
-
-    switch (format_spec) {
-    case 'd':
-        if constexpr (std::is_signed_v<T>) {
-            return parse_integer<T>(input);
-        } else {
-            return std::unexpected(scan_error{"Type is not a signed integer"});
-        }
-
-    case 'u':
-        if constexpr (std::is_unsigned_v<T>) {
-            return parse_unsigned<T>(input);
-        } else {
-            return std::unexpected(scan_error{"Type is not a unsigned integer"});
-        }
-
-    case 'f':
-        if constexpr (std::is_floating_point_v<T>) {
-            return parse_float<T>(input);
-        } else {
-            return std::unexpected(scan_error{"Type is not a floating"});
-        }
-    case 's':
-        return parse_string<T>(input);
-    default:
-        break;
-    }
-    return std::unexpected(scan_error{"Invalid format specifier"});
 }
 
 // Функция для проверки корректности входных данных и выделения из обеих строк интересующих данных для парсинга
