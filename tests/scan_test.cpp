@@ -315,6 +315,42 @@ TEST(ScanTest, parse_value_with_format__string__without_specifier) {
     ASSERT_EQ(parse_value_with_format<std::string>("Test", ""), "Test");
 }
 
+TEST(ScanTest, parse_value_with_format__const_volatile) {
+    ASSERT_EQ(parse_value_with_format<const int8_t>("42", "%d").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile int8_t>("42", "%d").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const int16_t>("42", "%d").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile int16_t>("42", "%d").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const int32_t>("42", "%d").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile int32_t>("42", "%d").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const int64_t>("42", "%d").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile int64_t>("42", "%d").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const uint8_t>("42", "%u").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile uint8_t>("42", "%u").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const uint16_t>("42", "%u").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile uint16_t>("42", "%u").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const uint32_t>("42", "%u").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile uint32_t>("42", "%u").value(), 42);
+
+    ASSERT_EQ(parse_value_with_format<const uint64_t>("42", "%u").value(), 42);
+    ASSERT_EQ(parse_value_with_format<volatile uint64_t>("42", "%u").value(), 42);
+
+    ASSERT_FLOAT_EQ(parse_value_with_format<const float>("42.19", "%f").value(), 42.19);
+    ASSERT_FLOAT_EQ(parse_value_with_format<volatile float>("42.19", "%f").value(), 42.19);
+
+    ASSERT_FLOAT_EQ(parse_value_with_format<const double>("42.19", "%f").value(), 42.19);
+    ASSERT_FLOAT_EQ(parse_value_with_format<volatile double>("42.19", "%f").value(), 42.19);
+
+    ASSERT_EQ(parse_value_with_format<const std::string_view>("Test", "%s").value(), "Test");
+
+    ASSERT_EQ(parse_value_with_format<const std::string>("Test", "%s").value(), "Test");
+}
+
 TEST(ScanTest, scan_2_vars_with_specifiers) {
     auto result =
         stdx::scan<int32_t, float>("I want to sum 42 and 3.14 numbers.", "I want to sum {%d} and {%f} numbers.");
