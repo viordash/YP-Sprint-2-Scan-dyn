@@ -44,31 +44,31 @@ TEST(ScanTest, test_is_supported_type_v) {
 }
 
 TEST(ScanTest, parse_value_with_format__invalid_specifier__returns_error) {
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "x").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%x").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", " d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "f").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "s").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%s").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%f").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%s").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%f").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<float>("0", "%d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<float>("0", "%u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<float>("0", "%s").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<double>("0", "%d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<double>("0", "%u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<double>("0", "%s").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%f").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string>("a", "%d").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string>("a", "%u").error().message, "Invalid format specifier");
-    ASSERT_EQ(parse_value_with_format<std::string>("a", "%f").error().message, "Invalid format specifier");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "x").error().message, "Incorrect specifier size");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%x").error().message, "Expected specifier %d");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", " d").error().message, "Expected specifier %d");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "d").error().message, "Incorrect specifier size");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "u").error().message, "Incorrect specifier size");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "f").error().message, "Incorrect specifier size");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "s").error().message, "Incorrect specifier size");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%u").error().message, "Expected specifier %d");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%s").error().message, "Expected specifier %d");
+    ASSERT_EQ(parse_value_with_format<int8_t>("0", "%f").error().message, "Expected specifier %d");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%d").error().message, "Expected specifier %u");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%s").error().message, "Expected specifier %u");
+    ASSERT_EQ(parse_value_with_format<uint8_t>("0", "%f").error().message, "Expected specifier %u");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%d").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%u").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<float>("0", "%s").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%d").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%u").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<double>("0", "%s").error().message, "Expected specifier %f");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%d").error().message, "Expected specifier %s");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%u").error().message, "Expected specifier %s");
+    ASSERT_EQ(parse_value_with_format<std::string_view>("a", "%f").error().message, "Expected specifier %s");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%d").error().message, "Expected specifier %s");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%u").error().message, "Expected specifier %s");
+    ASSERT_EQ(parse_value_with_format<std::string>("a", "%f").error().message, "Expected specifier %s");
 }
 
 TEST(ScanTest, parse_value_with_format__with_empty_input_in_numbers_returns_error) {
@@ -435,7 +435,7 @@ TEST(ScanTest, scan_returns_error_if_argument_count_mismatch) {
 
 TEST(ScanTest, scan_returns_error_if_incorrect_specifier) {
     auto result = stdx::scan<int8_t>("1", "{x}");
-    ASSERT_EQ(result.error().message, "Invalid format specifier");
+    ASSERT_EQ(result.error().message, "Incorrect specifier size");
 }
 
 TEST(ScanTest, scan_returns_error_if_input_empty) {
@@ -468,5 +468,5 @@ TEST(ScanTest, scan_returns_error_if_input_do_not_match_format) {
 
 TEST(ScanTest, scan_returns_error_if_types_do_not_match) {
     auto result = stdx::scan<int8_t>("int8_t:127", "int8_t:{%f}");
-    ASSERT_EQ(result.error().message, "Invalid format specifier");
+    ASSERT_EQ(result.error().message, "Expected specifier %d");
 }

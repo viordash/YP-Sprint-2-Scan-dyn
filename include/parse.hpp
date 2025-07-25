@@ -36,37 +36,58 @@ concept is_supported_type_v =
 // clang-format on
 
 template <typename T>
-static bool validate_format_specifier(std::string_view fmt) {
+static std::expected<void, scan_error> validate_format_specifier(std::string_view fmt) {
     if (fmt.empty()) {
-        return true;
+        return {};
     }
     if (fmt.size() != 2) {
-        return false;
+        return std::unexpected(scan_error{"Incorrect specifier size"});
     }
 
     if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
-        return fmt == "%d";
+        if (fmt == "%d") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %d"});
+        }
     }
     if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-        return fmt == "%u";
+        if (fmt == "%u") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %u"});
+        }
     }
     if constexpr (std::is_floating_point_v<T>) {
-        return fmt == "%f";
+        if (fmt == "%f") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %f"});
+        }
     }
     if constexpr (is_string_view_v<T>) {
-        return fmt == "%s";
+        if (fmt == "%s") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %s"});
+        }
     }
     if constexpr (is_string_v<T>) {
-        return fmt == "%s";
+        if (fmt == "%s") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %s"});
+        }
     }
-    return false;
+    return std::unexpected(scan_error{"An unexpected type"});
 }
 
 template <typename T>
     requires is_supported_type_v<T>
 std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
-    if (!validate_format_specifier<T>(fmt)) {
-        return std::unexpected(scan_error{"Invalid format specifier"});
+    auto specifier_validity = validate_format_specifier<T>(fmt);
+    if (!specifier_validity.has_value()) {
+        return std::unexpected(std::move(specifier_validity.error()));
     }
 
     if constexpr (is_string_view_v<T>) {
