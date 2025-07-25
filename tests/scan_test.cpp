@@ -36,9 +36,11 @@ TEST(ScanTest, test_is_supported_type_v) {
 
     ASSERT_FALSE(is_supported_type_v<char>);
     ASSERT_FALSE(is_supported_type_v<void *>);
+    ASSERT_FALSE(is_supported_type_v<char *>);
 
     ASSERT_FALSE(is_supported_type_v<const char>);
     ASSERT_FALSE(is_supported_type_v<const void *>);
+    ASSERT_FALSE(is_supported_type_v<const char *>);
 }
 
 TEST(ScanTest, parse_value_with_format__invalid_specifier__returns_error) {
