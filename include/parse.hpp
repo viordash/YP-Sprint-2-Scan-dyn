@@ -100,7 +100,7 @@ std::expected<T, scan_error> parse_value_with_format(std::string_view input, std
             return std::unexpected(scan_error{"Empty input"});
         }
 
-        T value;
+        std::remove_cv_t<T> value;
         auto result = std::from_chars(input.data(), input.data() + input.size(), value);
         if (result.ec == std::errc::result_out_of_range) {
             return std::unexpected(scan_error{"Conversion out of range"});
