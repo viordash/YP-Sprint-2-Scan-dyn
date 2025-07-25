@@ -2,6 +2,7 @@
 
 #include "parse.hpp"
 #include "types.hpp"
+#include <utility>
 
 namespace stdx {
 
@@ -27,7 +28,7 @@ std::expected<scan_result<Ts...>, scan_error> scan(std::string_view input, std::
             parse_value_with_format<std::remove_reference_t<decltype(value)>>(input_parts[index], format_parts[index]);
 
         if (!parsed) {
-            return std::unexpected(parsed.error());
+            return std::unexpected(std::move(parsed.error()));
         }
 
         value = std::move(*parsed);
