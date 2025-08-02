@@ -1,5 +1,7 @@
 #pragma once
 
+#include <charconv>
+#include <cstdint>
 #include <expected>
 #include <string>
 #include <string_view>
@@ -10,19 +12,111 @@
 
 namespace stdx::details {
 
-// здесь ваш код
+template <typename T, typename... Ts>
+concept is_string_view_v = std::is_same_v<std::remove_cv_t<T>, std::string_view>;
 
-// Функция для парсинга значения с учетом спецификатора формата
 template <typename T>
+concept is_string_v = std::is_same_v<std::remove_cv_t<T>, std::string>;
+
+// clang-format off
+template <typename T>
+concept is_supported_type_v = 
+    std::is_same_v<std::remove_cv_t<T>, int8_t>  
+    || std::is_same_v<std::remove_cv_t<T>, int16_t> 
+    || std::is_same_v<std::remove_cv_t<T>, int32_t> 
+    || std::is_same_v<std::remove_cv_t<T>, int64_t> 
+    || std::is_same_v<std::remove_cv_t<T>, uint8_t> 
+    || std::is_same_v<std::remove_cv_t<T>, uint16_t> 
+    || std::is_same_v<std::remove_cv_t<T>, uint32_t> 
+    || std::is_same_v<std::remove_cv_t<T>, uint64_t> 
+    || std::is_same_v<std::remove_cv_t<T>, float>   
+    || std::is_same_v<std::remove_cv_t<T>, double>  
+    || is_string_view_v<T> 
+    || is_string_v<T>;
+// clang-format on
+
+template <typename T>
+static std::expected<void, scan_error> validate_format_specifier(std::string_view fmt) {
+    if (fmt.empty()) {
+        return {};
+    }
+    if (fmt.size() != 2) {
+        return std::unexpected(scan_error{"Incorrect specifier size"});
+    }
+
+    if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
+        if (fmt == "%d") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %d"});
+        }
+    }
+    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+        if (fmt == "%u") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %u"});
+        }
+    }
+    if constexpr (std::is_floating_point_v<T>) {
+        if (fmt == "%f") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %f"});
+        }
+    }
+    if constexpr (is_string_view_v<T>) {
+        if (fmt == "%s") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %s"});
+        }
+    }
+    if constexpr (is_string_v<T>) {
+        if (fmt == "%s") {
+            return {};
+        } else {
+            return std::unexpected(scan_error{"Expected specifier %s"});
+        }
+    }
+    return std::unexpected(scan_error{"An unexpected type"});
+}
+
+template <typename T>
+    requires is_supported_type_v<T>
 std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
-    // здесь ваш код
+    auto specifier_validity = validate_format_specifier<T>(fmt);
+    if (!specifier_validity.has_value()) {
+        return std::unexpected(std::move(specifier_validity.error()));
+    }
+
+    if constexpr (is_string_view_v<T>) {
+        return T(input);
+    } else if constexpr (is_string_v<T>) {
+        return T(input);
+    } else {
+
+        if (input.empty()) {
+            return std::unexpected(scan_error{"Empty input"});
+        }
+
+        std::remove_cv_t<T> value;
+        auto result = std::from_chars(input.data(), input.data() + input.size(), value);
+        if (result.ec == std::errc::result_out_of_range) {
+            return std::unexpected(scan_error{"Conversion out of range"});
+        } else if (result.ec != std::errc()) {
+            return std::unexpected(scan_error{"Conversion failed"});
+        }
+
+        return value;
+    }
 }
 
 // Функция для проверки корректности входных данных и выделения из обеих строк интересующих данных для парсинга
 template <typename... Ts>
 std::expected<std::pair<std::vector<std::string_view>, std::vector<std::string_view>>, scan_error>
 parse_sources(std::string_view input, std::string_view format) {
-    std::vector<std::string_view> format_parts;  // Части формата между {}
+    std::vector<std::string_view> format_parts; // Части формата между {}
     std::vector<std::string_view> input_parts;
     size_t start = 0;
     while (true) {

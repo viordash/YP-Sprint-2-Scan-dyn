@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <tuple>
 
 namespace stdx::details {
 
@@ -12,7 +14,8 @@ struct scan_error {
 
 template <typename... Ts>
 struct scan_result {
-    // здесь ваш код
+    std::tuple<Ts...> values;
+    explicit scan_result(std::tuple<Ts...> v) : values(std::move(v)) {}
 };
 
 } // namespace stdx::details
